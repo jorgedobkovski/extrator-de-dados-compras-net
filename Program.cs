@@ -38,7 +38,7 @@ using (PdfReader leitor = new PdfReader("C:/temp/pdf/termo.pdf"))
         Console.WriteLine("Índices não encontrados. ETAPA: Coletando informações brutas a entre os eventos da compra e as propostas do item.");
     }
 
-    //Separando as informações dos itens
+    //Separando as informações brutas dos itens
     int indexTituloItemNumero = -1;
     var conteudoDoItem = "";
 
@@ -49,6 +49,26 @@ using (PdfReader leitor = new PdfReader("C:/temp/pdf/termo.pdf"))
     } else
     {
         Console.WriteLine("Índices não encontrados. ETAPA: Separando as informações dos itens das informações brutas (eventos da compra - propostas)");
+    }
+
+    //Coletando informações do item 
+    int numeroItem = 0;
+    var descricaoDoItem = "";
+    var descricaoDetalhadaDoItem = "";
+    decimal quantidadeDoItem = 0;
+    decimal valorEstimadoDoItem = 0;
+    string unidadeDeFornecimentoDoItem = "";
+    string situacaoDoItem = "";
+    string melhorLanceDoItem = "";
+    string fornecedorVencedorDoItem = "";
+
+    if(conteudoDoItem != "" && indexTituloItemNumero != 0)
+    {
+        var indexItemNumeroDescricao = conteudoDoItem.IndexOf("\nItem ");
+        var 
+    } else
+    {
+        Console.WriteLine("Índices não encontrados. ETAPA: Coletando cada informacao individulmente");
     }
 
     Console.WriteLine(conteudoDoItem);
