@@ -1,6 +1,7 @@
 ﻿using extratorTermoHomologacaoComprasNet.Models;
 using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
+using System.Drawing;
 using System.Text;
 
 using (PdfReader leitor = new PdfReader("C:/temp/pdf/termo.pdf"))
@@ -44,7 +45,7 @@ using (PdfReader leitor = new PdfReader("C:/temp/pdf/termo.pdf"))
 
     if (conteudoBrutoContendoInformacoesDoItem != "")
     {
-        indexTituloItemNumero = conteudoBrutoContendoInformacoesDoItem.IndexOf("\nItem ");
+        indexTituloItemNumero = conteudoBrutoContendoInformacoesDoItem.IndexOf("Item ");
         conteudoDoItem = conteudoBrutoContendoInformacoesDoItem.Substring(indexTituloItemNumero);
     } else
     {
@@ -62,15 +63,45 @@ using (PdfReader leitor = new PdfReader("C:/temp/pdf/termo.pdf"))
     string melhorLanceDoItem = "";
     string fornecedorVencedorDoItem = "";
 
-    if(conteudoDoItem != "" && indexTituloItemNumero != 0)
+    if(conteudoDoItem != "" && indexTituloItemNumero != -1)
     {
-        var indexItemNumeroDescricao = conteudoDoItem.IndexOf("\nItem ");
-        var 
+
+        //separando título Item X - Descricao
+        var indexPrimeiraQuebraDeLinhaPosDescricao = conteudoDoItem.IndexOf('\n');
+        var tituloItemNumeroDescricao = conteudoDoItem.Substring(0, indexPrimeiraQuebraDeLinhaPosDescricao);
+        var indexHifenPosNumero = tituloItemNumeroDescricao.IndexOf(" - ");
+
+        //seprando numero do item e convertendo para int
+        var stringNumeroDoItem = tituloItemNumeroDescricao.Substring(5, indexHifenPosNumero-5); //"Item " = 5 caracteres
+        numeroItem = int.Parse(stringNumeroDoItem);
+
+        //separando descricao do item
+        descricaoDoItem = tituloItemNumeroDescricao.Substring(indexHifenPosNumero + 3);
+
+        //separando descricao detalhada
+        var conteudoDoItemSemTitulo = conteudoDoItem.Substring(tituloItemNumeroDescricao.Length + 1);
+        var indexLabelQuantidadeDoisPontos = conteudoDoItem.IndexOf("\nQuantidade: ");
+        var informacoesDoItem = conteudoDoItem.Substring(indexLabelQuantidadeDoisPontos+1);
+        var tamanhoDescricaoDetalhadaDoItem = (conteudoDoItemSemTitulo.Length - informacoesDoItem.Length)-1; //-1 para tirar a quebra de linha
+        descricaoDetalhadaDoItem = conteudoDoItemSemTitulo.Substring(0, tamanhoDescricaoDetalhadaDoItem);
+
+        //separando quantidade do item
+        var indexDaPrimeiraQuebraDeLinhaPosLabelQuantidade = informacoesDoItem.IndexOf("\n");
+        var conteudoLinhaComQuantidadeEValorEstimado = informacoesDoItem.Substring(0, indexDaPrimeiraQuebraDeLinhaPosLabelQuantidade);
+        var labelValorEstimado = " Valor estimado: R$ ";
+        var indexLabelValorEstimadoDoisPontos = conteudoLinhaComQuantidadeEValorEstimado.IndexOf(labelValorEstimado);
+        var stringQuantidadeDoItem = conteudoLinhaComQuantidadeEValorEstimado.Substring(12, indexLabelValorEstimadoDoisPontos-12); //"Quantidade: " = 12 caracteres
+        quantidadeDoItem = Decimal.Parse(stringQuantidadeDoItem);
+
+        //separando valor estimado
+        var stringValorEstimadoDoItem = conteudoLinhaComQuantidadeEValorEstimado.Substring(indexLabelValorEstimadoDoisPontos + labelValorEstimado.Length);
+        valorEstimadoDoItem = Decimal.Parse(stringValorEstimadoDoItem);
+
+        Console.WriteLine(valorEstimadoDoItem);
     } else
     {
         Console.WriteLine("Índices não encontrados. ETAPA: Coletando cada informacao individulmente");
     }
 
-    Console.WriteLine(conteudoDoItem);
     Console.ReadLine();
 }
