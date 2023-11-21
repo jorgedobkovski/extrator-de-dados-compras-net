@@ -60,8 +60,10 @@ using (PdfReader leitor = new PdfReader("C:/temp/pdf/termo.pdf"))
     decimal valorEstimadoDoItem = 0;
     string unidadeDeFornecimentoDoItem = "";
     string situacaoDoItem = "";
-    string melhorLanceDoItem = "";
-    string fornecedorVencedorDoItem = "";
+    string pregoeiro = "";
+    string razaoSocialFornecedorVencedorDoItem = "";
+    string cnpjFornecedorVencedorDoItem = "";
+    decimal melhorLanceDoItem = 0;
 
     if(conteudoDoItem != "" && indexTituloItemNumero != -1)
     {
@@ -83,10 +85,10 @@ using (PdfReader leitor = new PdfReader("C:/temp/pdf/termo.pdf"))
         var indexLabelQuantidadeDoisPontos = conteudoDoItem.IndexOf("\nQuantidade: ");
         var informacoesDoItem = conteudoDoItem.Substring(indexLabelQuantidadeDoisPontos+1);
         var tamanhoDescricaoDetalhadaDoItem = (conteudoDoItemSemTitulo.Length - informacoesDoItem.Length)-1; //-1 para tirar a quebra de linha
-        descricaoDetalhadaDoItem = conteudoDoItemSemTitulo.Substring(0, tamanhoDescricaoDetalhadaDoItem);
+        descricaoDetalhadaDoItem = conteudoDoItemSemTitulo.Substring(0, tamanhoDescricaoDetalhadaDoItem).Replace("\n", " ").Replace("\r", " "); //retirando quebras de linhas
 
         //separando quantidade do item
-        var indexDaPrimeiraQuebraDeLinhaPosLabelQuantidade = informacoesDoItem.IndexOf("\n");
+        var indexDaPrimeiraQuebraDeLinhaPosLabelQuantidade = informacoesDoItem.IndexOf("\n"); // localiza a primeira quebra de linha a partir da label quantidade:
         var conteudoLinhaComQuantidadeEValorEstimado = informacoesDoItem.Substring(0, indexDaPrimeiraQuebraDeLinhaPosLabelQuantidade);
         var labelValorEstimado = " Valor estimado: R$ ";
         var indexLabelValorEstimadoDoisPontos = conteudoLinhaComQuantidadeEValorEstimado.IndexOf(labelValorEstimado);
@@ -97,11 +99,67 @@ using (PdfReader leitor = new PdfReader("C:/temp/pdf/termo.pdf"))
         var stringValorEstimadoDoItem = conteudoLinhaComQuantidadeEValorEstimado.Substring(indexLabelValorEstimadoDoisPontos + labelValorEstimado.Length);
         valorEstimadoDoItem = Decimal.Parse(stringValorEstimadoDoItem);
 
-        Console.WriteLine(valorEstimadoDoItem);
+        //separando linha com: Unidade de fornecimento e situacao
+        var labelUnidadeDeFornecimento = "\nUnidade de fornecimento: ";
+        var labelSituacao = " Situação: ";
+        var indexLabelUnidadeDeFornecimento = informacoesDoItem.IndexOf(labelUnidadeDeFornecimento);
+        var indexLabelSituacao = informacoesDoItem.IndexOf(labelSituacao);
+        var informacoesBrutasDoItemAPartirDaUnidadeDeFornecimento = informacoesDoItem.Substring(indexLabelUnidadeDeFornecimento);
+        var informacoesBrutasDoItemAPartirDaSituacao = informacoesDoItem.Substring(indexLabelSituacao);
+        var tamanhoUnidadeDeFornecimento = (informacoesBrutasDoItemAPartirDaUnidadeDeFornecimento.Length - labelUnidadeDeFornecimento.Length) - informacoesBrutasDoItemAPartirDaSituacao.Length;
+        unidadeDeFornecimentoDoItem = informacoesBrutasDoItemAPartirDaUnidadeDeFornecimento.Substring(labelUnidadeDeFornecimento.Length, tamanhoUnidadeDeFornecimento);
+
+        //coletando situacao do item
+        var textoAdjudicadoEHomologadoPor = "\nAdjucado e Homologado por ";
+        var indexTextoAdjudicadoEHomologadoPor = informacoesBrutasDoItemAPartirDaSituacao.IndexOf(textoAdjudicadoEHomologadoPor);
+        var informacoesAPartirDoTextoAdjudicadoEHomologadoPor = informacoesBrutasDoItemAPartirDaSituacao.Substring(indexTextoAdjudicadoEHomologadoPor);
+        var tamanhoSituacaoDoItem = (informacoesBrutasDoItemAPartirDaSituacao.Length - labelSituacao.Length) - informacoesAPartirDoTextoAdjudicadoEHomologadoPor.Length;
+        situacaoDoItem = informacoesBrutasDoItemAPartirDaSituacao.Substring(labelSituacao.Length, tamanhoSituacaoDoItem);
+
+        //coletando informações do pregoeiro
+        var textoTravessaoAntesDoNomePregoeiro = " - ";
+        var indexTravessaoAntesDoNomePregoeiro = informacoesBrutasDoItemAPartirDaSituacao.IndexOf(textoTravessaoAntesDoNomePregoeiro);
+        var conteudoAPartirDoNomeDoPregoeiro = informacoesBrutasDoItemAPartirDaSituacao.Substring(indexTravessaoAntesDoNomePregoeiro).Replace("\n", " ").Replace("\r", " "); //retirando quebras de linhas para evitar problemas.
+        var textoParaAposNomeDoPregoeiro = " para ";
+        var indexParaAposONomeDoPregoeiro = conteudoAPartirDoNomeDoPregoeiro.IndexOf(textoParaAposNomeDoPregoeiro);
+        var conteudoAPartirRazaoSocialFornecedorVencedor = conteudoAPartirDoNomeDoPregoeiro.Substring(indexParaAposONomeDoPregoeiro);
+        var tamanhoNomeDoPregoeiro = (conteudoAPartirDoNomeDoPregoeiro.Length - textoTravessaoAntesDoNomePregoeiro.Length) - conteudoAPartirRazaoSocialFornecedorVencedor.Length;
+        pregoeiro = conteudoAPartirDoNomeDoPregoeiro.Substring(textoTravessaoAntesDoNomePregoeiro.Length, tamanhoNomeDoPregoeiro);
+
+        //coletando razao social fornecedor
+        var textoVirgulaCNPJ = ", CNPJ ";
+        var indexTextoVirgulaCNPJ = conteudoAPartirRazaoSocialFornecedorVencedor.IndexOf(textoVirgulaCNPJ);
+        var conteudoAPartirTextoVirgulaCPNJ = conteudoAPartirRazaoSocialFornecedorVencedor.Substring(indexTextoVirgulaCNPJ);
+        var tamanhoRazaoSocialFornecedor = (conteudoAPartirRazaoSocialFornecedorVencedor.Length - textoParaAposNomeDoPregoeiro.Length) - conteudoAPartirTextoVirgulaCPNJ.Length;
+        razaoSocialFornecedorVencedorDoItem = conteudoAPartirRazaoSocialFornecedorVencedor.Substring(textoParaAposNomeDoPregoeiro.Length, tamanhoRazaoSocialFornecedor);
+
+        //coletando CNPJ do fornecedor
+        var textoMelhorLanceDoisPontos = ", melhor lance: R$ ";
+        var indexTextoMelhorLanceDoisPontos = conteudoAPartirTextoVirgulaCPNJ.IndexOf(textoMelhorLanceDoisPontos);
+        var conteudoAPartirTextoMelhorLanceDoisPontos = conteudoAPartirTextoVirgulaCPNJ.Substring(indexTextoMelhorLanceDoisPontos);
+        var tamanhoCNPJCPFdoFornecedor = (conteudoAPartirTextoVirgulaCPNJ.Length - textoVirgulaCNPJ.Length) - conteudoAPartirTextoMelhorLanceDoisPontos.Length;
+        cnpjFornecedorVencedorDoItem = conteudoAPartirTextoVirgulaCPNJ.Substring(textoVirgulaCNPJ.Length, tamanhoCNPJCPFdoFornecedor);
+
+        //coletando melhor lance valor
+        var stringMelhorLanceDoItem = conteudoAPartirTextoMelhorLanceDoisPontos.Substring(textoMelhorLanceDoisPontos.Length);
+        melhorLanceDoItem = Decimal.Parse(stringMelhorLanceDoItem);
+
     } else
     {
         Console.WriteLine("Índices não encontrados. ETAPA: Coletando cada informacao individulmente");
     }
+
+    Console.WriteLine("Número:                                   " + numeroItem);
+    Console.WriteLine("Descrição:                                " + descricaoDoItem);
+    Console.WriteLine("Descrição Detalhada:                      " + descricaoDetalhadaDoItem);
+    Console.WriteLine("Quantidade:                               " + quantidadeDoItem);
+    Console.WriteLine("Valor Estimado:                           " + valorEstimadoDoItem);
+    Console.WriteLine("Unidade de Fornecimento:                  " + unidadeDeFornecimentoDoItem);
+    Console.WriteLine("Situação:                                 " + situacaoDoItem);
+    Console.WriteLine("Pregoeiro:                                " + pregoeiro);
+    Console.WriteLine("Razão Social do Fornecedor Vencedor:      " + razaoSocialFornecedorVencedorDoItem);
+    Console.WriteLine("CNPJ/CPF do Fornecedor Vencedor:          " + cnpjFornecedorVencedorDoItem);
+    Console.WriteLine("Melhor Lance:                             " + melhorLanceDoItem);
 
     Console.ReadLine();
 }
