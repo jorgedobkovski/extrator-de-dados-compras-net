@@ -11,9 +11,14 @@ namespace extratorTermoHomologacaoComprasNet.Models
         public int Numero { get; set; }
         public string? Descricao { get; set; }
         public string? DescricaoDetalhada { get; set; }
+        public decimal? Quantidade { get; set; }
         public decimal? ValorEstimado { get; set; }
         public string? UnidadeFornecimento { get; set; }
         public string? Situacao { get; set; }
+        public string? Pregoeiro { get; set; }
+        public string? FornecedorNomeRazaoSocial { get; set; }
+        public string? FornecedorCPFCNPJ { get; set; }
+        public decimal? MelhorLance { get; set; }
 
     }
 }

@@ -8,11 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="iTextSharp" Version="5.5.13.3" />
+    <Compile Remove="Extrator\**" />
+    <EmbeddedResource Remove="Extrator\**" />
+    <None Remove="Extrator\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Extrator\" />
+    <PackageReference Include="iTextSharp" Version="5.5.13.3" />
   </ItemGroup>
 
 </Project>
