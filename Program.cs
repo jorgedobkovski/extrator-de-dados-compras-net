@@ -5,7 +5,7 @@ using iTextSharp.text.pdf.parser;
 using System.Drawing;
 using System.Text;
 
-using (PdfReader leitor = new PdfReader("C:/temp/pdf/termo.pdf"))
+using (PdfReader leitor = new PdfReader("C:/temp/pdf/termoD.pdf"))
 {
     StringBuilder texto = new StringBuilder();
     for (int i = 1; i <= leitor.NumberOfPages; i++)

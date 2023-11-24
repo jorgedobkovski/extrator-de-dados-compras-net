@@ -19,7 +19,7 @@ namespace extratorTermoHomologacaoComprasNet.Models
         public bool CompraEmergencial { get; set; }
         public string ObjetoDaCompra { get; set; }
         public string EntregaDePropostas { get; set; }
-        public string DataDeAbertura { get; set; }
+        public string AberturaSessaoPublica { get; set; }
         public string Caracteristica { get; set; }
         public string ModoDeDisputa { get; set; }
 
