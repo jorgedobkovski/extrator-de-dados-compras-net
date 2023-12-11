@@ -15,8 +15,6 @@ namespace extratorTermoHomologacaoComprasNet.Builders
 
             var conteudoBrutoContendoInformacoesDoItem = IsolarInformacoesBrutasDoItem(conteudoPdf);
 
-            Console.WriteLine(conteudoBrutoContendoInformacoesDoItem);
-
             //Separando as informações brutas dos itens
             int indexTituloItemNumero = -1;
             var conteudoDoItem = "";
@@ -43,6 +41,9 @@ namespace extratorTermoHomologacaoComprasNet.Builders
             string razaoSocialFornecedorVencedorDoItem = "";
             string cnpjFornecedorVencedorDoItem = "";
             decimal melhorLanceDoItem = 0;
+            decimal valorNegociadoDoItem = 0;
+            string tratamentoDiferenciadoMEEPP = "";
+            decimal intervaloMinimoEntreLances = 0;
 
             if (conteudoDoItem != "" && indexTituloItemNumero != -1)
             {
@@ -63,6 +64,7 @@ namespace extratorTermoHomologacaoComprasNet.Builders
                 var conteudoDoItemSemTitulo = conteudoDoItem.Substring(tituloItemNumeroDescricao.Length + 1);
                 var indexLabelQuantidadeDoisPontos = conteudoDoItem.IndexOf("\nQuantidade: ");
                 var informacoesDoItem = conteudoDoItem.Substring(indexLabelQuantidadeDoisPontos + 1);
+                var informacoesDoItemSemQuebrasDeLinha = informacoesDoItem.Replace("\n", "").Replace("\r", "");
                 var tamanhoDescricaoDetalhadaDoItem = (conteudoDoItemSemTitulo.Length - informacoesDoItem.Length) - 1; //-1 para tirar a quebra de linha
                 descricaoDetalhadaDoItem = conteudoDoItemSemTitulo.Substring(0, tamanhoDescricaoDetalhadaDoItem).Replace("\n", " ").Replace("\r", " "); //retirando quebras de linhas
 
@@ -89,11 +91,52 @@ namespace extratorTermoHomologacaoComprasNet.Builders
                 unidadeDeFornecimentoDoItem = informacoesBrutasDoItemAPartirDaUnidadeDeFornecimento.Substring(labelUnidadeDeFornecimento.Length, tamanhoUnidadeDeFornecimento);
 
                 //coletando situacao do item
+                var textoIntervaloMinimoEntreLances = "\nIntervalo mínimo entre lances: R$ ";
+                var indexTextoIntervaloMinimoEntreLances = informacoesBrutasDoItemAPartirDaSituacao.IndexOf(textoIntervaloMinimoEntreLances);
                 var textoAdjudicadoEHomologadoPor = "\nAdjucado e Homologado por ";
                 var indexTextoAdjudicadoEHomologadoPor = informacoesBrutasDoItemAPartirDaSituacao.IndexOf(textoAdjudicadoEHomologadoPor);
-                var informacoesAPartirDoTextoAdjudicadoEHomologadoPor = informacoesBrutasDoItemAPartirDaSituacao.Substring(indexTextoAdjudicadoEHomologadoPor);
-                var tamanhoSituacaoDoItem = (informacoesBrutasDoItemAPartirDaSituacao.Length - labelSituacao.Length) - informacoesAPartirDoTextoAdjudicadoEHomologadoPor.Length;
-                situacaoDoItem = informacoesBrutasDoItemAPartirDaSituacao.Substring(labelSituacao.Length, tamanhoSituacaoDoItem);
+                var indexFimSituacaoDoItem = -1;
+
+                if(indexTextoIntervaloMinimoEntreLances == -1)
+                {
+                    indexFimSituacaoDoItem = indexTextoAdjudicadoEHomologadoPor;
+                } else
+                {
+                    indexFimSituacaoDoItem = indexTextoIntervaloMinimoEntreLances;
+                }
+                
+                situacaoDoItem = informacoesBrutasDoItemAPartirDaSituacao.Substring(labelSituacao.Length, indexFimSituacaoDoItem - labelSituacao.Length);
+
+                var textoTratamentoDiferenciadoMEEPP = "\nTratamento Diferenciado ME/EPP: ";
+                var indexTextoTratamentoDiferenciadoMEEPP = informacoesBrutasDoItemAPartirDaSituacao.IndexOf(textoTratamentoDiferenciadoMEEPP);
+
+                //coletando Informacoes  do intervalo minimo entre lances
+                
+                var indexFinalIntervaloMinimoEntreLances = -1;
+                if (indexTextoIntervaloMinimoEntreLances != -1)
+                {
+                    var conteudoAPartirMinimoEntreLances = informacoesBrutasDoItemAPartirDaSituacao.Substring(indexTextoIntervaloMinimoEntreLances + textoIntervaloMinimoEntreLances.Length);
+                    if(indexTextoTratamentoDiferenciadoMEEPP == -1)
+                    {
+                        indexFinalIntervaloMinimoEntreLances = conteudoAPartirMinimoEntreLances.IndexOf(textoAdjudicadoEHomologadoPor);
+                    }
+                    else
+                    {
+                        indexFinalIntervaloMinimoEntreLances = conteudoAPartirMinimoEntreLances.IndexOf(textoTratamentoDiferenciadoMEEPP);
+                    }
+                    var stringIntervaloMinimoEntreLances = conteudoAPartirMinimoEntreLances.Substring(0, indexFinalIntervaloMinimoEntreLances);
+                    intervaloMinimoEntreLances = Decimal.Parse(stringIntervaloMinimoEntreLances);
+                }
+
+                //coletando informações do tratamento diferenciado
+                
+                if(indexTextoTratamentoDiferenciadoMEEPP != -1)
+                {
+                    var conteudoAposTextoTratamentoDiferenciadoMEEPP = informacoesBrutasDoItemAPartirDaSituacao.Substring(indexTextoTratamentoDiferenciadoMEEPP + textoTratamentoDiferenciadoMEEPP.Length);
+                    var indexFinalTratamentoDiferenciadoMEEPP = conteudoAposTextoTratamentoDiferenciadoMEEPP.IndexOf(textoAdjudicadoEHomologadoPor);
+                    var stringTratamentoDiferenciadoMEEPP = conteudoAposTextoTratamentoDiferenciadoMEEPP.Substring(0, indexFinalTratamentoDiferenciadoMEEPP);
+                    tratamentoDiferenciadoMEEPP = stringTratamentoDiferenciadoMEEPP.Replace("\n", "").Replace("\r", "");
+                }
 
                 //coletando informações do pregoeiro
                 var textoTravessaoAntesDoNomePregoeiro = " - ";
@@ -104,6 +147,7 @@ namespace extratorTermoHomologacaoComprasNet.Builders
                 var conteudoAPartirRazaoSocialFornecedorVencedor = conteudoAPartirDoNomeDoPregoeiro.Substring(indexParaAposONomeDoPregoeiro);
                 var tamanhoNomeDoPregoeiro = (conteudoAPartirDoNomeDoPregoeiro.Length - textoTravessaoAntesDoNomePregoeiro.Length) - conteudoAPartirRazaoSocialFornecedorVencedor.Length;
                 pregoeiro = conteudoAPartirDoNomeDoPregoeiro.Substring(textoTravessaoAntesDoNomePregoeiro.Length, tamanhoNomeDoPregoeiro);
+
 
                 //coletando razao social fornecedor
                 var textoVirgulaCNPJ = ", CNPJ ";
@@ -120,8 +164,28 @@ namespace extratorTermoHomologacaoComprasNet.Builders
                 cnpjFornecedorVencedorDoItem = conteudoAPartirTextoVirgulaCPNJ.Substring(textoVirgulaCNPJ.Length, tamanhoCNPJCPFdoFornecedor);
 
                 //coletando melhor lance valor
-                var stringMelhorLanceDoItem = conteudoAPartirTextoMelhorLanceDoisPontos.Substring(textoMelhorLanceDoisPontos.Length);
-                melhorLanceDoItem = Decimal.Parse(stringMelhorLanceDoItem);
+                var conteudoAposTextoMelhorLanceDoItem = conteudoAPartirTextoMelhorLanceDoisPontos.Substring(textoMelhorLanceDoisPontos.Length);
+                var textoValorNegociado = ", valor negociado: R$ ";
+                var indexTextoValorNegociado = conteudoAposTextoMelhorLanceDoItem.IndexOf(textoValorNegociado);
+                var stringMelhorLanceDoItem = "";
+
+
+                if (indexTextoValorNegociado == -1)
+                {
+                    stringMelhorLanceDoItem = conteudoAposTextoMelhorLanceDoItem;
+                    melhorLanceDoItem = Decimal.Parse(stringMelhorLanceDoItem); 
+                }
+                else
+                {
+                    stringMelhorLanceDoItem = conteudoAposTextoMelhorLanceDoItem.Substring(0, indexTextoValorNegociado);
+                    melhorLanceDoItem = Decimal.Parse(stringMelhorLanceDoItem);
+                    var conteudoAposTextoValorNegociado = conteudoAposTextoMelhorLanceDoItem.Substring(indexTextoValorNegociado + textoValorNegociado.Length);
+                    var stringValorNegociado = conteudoAposTextoValorNegociado;
+                    valorNegociadoDoItem = Decimal.Parse(stringValorNegociado);
+                }
+
+               
+
 
             }
             else
@@ -140,6 +204,26 @@ namespace extratorTermoHomologacaoComprasNet.Builders
             item.FornecedorNomeRazaoSocial = razaoSocialFornecedorVencedorDoItem;
             item.FornecedorCPFCNPJ = cnpjFornecedorVencedorDoItem;
             item.MelhorLance = melhorLanceDoItem;
+            item.ValorNegociado = valorNegociadoDoItem;
+            item.IntervaloMinimoEntreLances = intervaloMinimoEntreLances;
+            item.TratamentoDiferenciadoMEEPP = tratamentoDiferenciadoMEEPP;
+
+            Console.WriteLine("- - - - - - i t e m - - - - - - - - - - - - - - - - - - - - - -");
+            Console.WriteLine("Número:                                   " + item.Numero);
+            Console.WriteLine("Descrição:                                " + item.Descricao);
+            Console.WriteLine("Descrição Detalhada:                      " + item.DescricaoDetalhada);
+            Console.WriteLine("Quantidade:                               " + item.Quantidade);
+            Console.WriteLine("Valor Estimado:                           " + item.ValorEstimado);
+            Console.WriteLine("Unidade de Fornecimento:                  " + item.UnidadeFornecimento);
+            Console.WriteLine("Situação:                                 " + item.Situacao);
+            Console.WriteLine("Pregoeiro:                                " + item.Pregoeiro);
+            Console.WriteLine("Razão Social do Fornecedor Vencedor:      " + item.FornecedorNomeRazaoSocial);
+            Console.WriteLine("CNPJ/CPF do Fornecedor Vencedor:          " + item.FornecedorCPFCNPJ);
+            Console.WriteLine("Melhor Lance:                             " + item.MelhorLance);
+            Console.WriteLine("Valor Negociado:                          " + item.ValorNegociado);
+            Console.WriteLine("Intervalo Minimo entre:                   " + item.IntervaloMinimoEntreLances);
+            Console.WriteLine("Tratamento Diferenciado:                  " + item.TratamentoDiferenciadoMEEPP);
+            Console.WriteLine(" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
 
             return item;
         }

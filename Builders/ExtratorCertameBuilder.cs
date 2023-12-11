@@ -137,8 +137,8 @@ namespace extratorTermoHomologacaoComprasNet.Builders
             certame.EntregaDePropostas = informacaoEntregaPropostas;
             certame.AberturaSessaoPublica = informacaoAberturaSessaoPublica;
 
-            Console.WriteLine("- - - - - - - - - - - - - - - - - - - - - - - - - - - -");
             Console.WriteLine("I N F O R M A Ç Õ E S   A T É   O   M O M E N T O :");
+            Console.WriteLine("- - - - - - c e r t a m e - - - - - - - - - - - - - - - - -");
             Console.WriteLine("Número certame:                " + certame.Numero);
             Console.WriteLine("Ano certame:                   " + certame.Ano);
             Console.WriteLine("Hora de Homologação:           " + certame.HoraHomologacao);

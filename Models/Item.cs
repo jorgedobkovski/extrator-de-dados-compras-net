@@ -19,6 +19,9 @@ namespace extratorTermoHomologacaoComprasNet.Models
         public string? FornecedorNomeRazaoSocial { get; set; }
         public string? FornecedorCPFCNPJ { get; set; }
         public decimal? MelhorLance { get; set; }
+        public decimal? ValorNegociado { get; set; }
+        public string? TratamentoDiferenciadoMEEPP { get; set; }
+        public decimal? IntervaloMinimoEntreLances { get; set; }
 
     }
 }
